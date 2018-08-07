@@ -1,5 +1,5 @@
-var fs = require('fs')
-
+const fs = require('fs')
+const mime = require('mime');
 function Transfer(req, res) {
 	this.req = req;
 	this.res = res;
@@ -32,7 +32,7 @@ Transfer.prototype._configHeader = function(Config) {
 		res.setHeader('Content-Range', 'bytes ' + startPos + '-' + (fileSize - 1) + '/' + fileSize);
 	}
 	res.writeHead(206, 'Partial Content', {
-		'Content-Type' : 'application/octet-stream',
+		'Content-Type' :  mime.getType(Config.filePath),
 	});
 }
 /**
@@ -48,6 +48,7 @@ Transfer.prototype._init = function(filePath, down) {
 			throw error;
         if (state.isDirectory()) return;
 		config.fileSize = state.size;
+		config.filePath = filePath;
 		var range = self.req.headers.range;
 		config.startPos = self._calStartPosition(range);
 		self.config = config;
@@ -68,18 +69,17 @@ Transfer.prototype.Download = function(filePath) {
 					res = self.res;
 				fReadStream = fs.createReadStream(filePath, {
 					encoding : 'binary',
-					bufferSize : 1024 * 1024 * 1024,
+					bufferSize : 1024 * 1024,
 					start : config.startPos,
 					end : config.fileSize
 				});
-				// fReadStream.on('data', function(chunk) {
-				// 	res.write(chunk, 'binary');
-				// });
-				fReadStream.pipe(res);
+				fReadStream.on('data', function(chunk) {
+					res.write(chunk, 'binary');
+				});
+				// fReadStream.pipe(res);
 				fReadStream.on('end', function() {
 					res.end();
 				});
-				
 			});
 		} else {
 			console.log('文件不存在！');

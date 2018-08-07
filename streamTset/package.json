@@ -6,7 +6,9 @@
   "dependencies": {
     "_mime@2.3.1@mime": "^2.3.1"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "mime": "^2.3.1"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
