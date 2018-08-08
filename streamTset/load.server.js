@@ -3,21 +3,28 @@ const fs = require('fs');
 const stream = require('stream');
 const url = require('url');
 const mime = require('mime');
-const Transfer = require('./src/checkFile');
-function fileSend(path, req, res) {
+
+
+
+   function fileSend(path, req, res) {
     var config = {};
     var startPos = 0;
+    
+    if (req.headers.range) { 
+        console.log(req.headers)
+        var Range = req.headers.range;
+    }
 	if( typeof Range != 'undefined') {
         var startPosMatch = /^bytes=([0-9]+)-$/.exec(Range);
         startPos = Number(startPosMatch[1]);
         if(startPos == 0) {   //配置请求头
             res.setHeader('Accept-Range', 'bytes');
         } else {
-            res.setHeader('Content-Range', 'bytes ' + startPos + '-' + (fileSize - 1) + '/' + fileSize);
+            res.setHeader('Content-Range', 'bytes ' + startPos + '-' + (config.fileSize - 1) + '/' + config.fileSize);
         }
 	}
     res.writeHead(200,{'Content-type': mime.getType(path)}); //配置文件类型
-    fs.stat(path, function(error, state) {
+    fs.stat(path, (error, state) => {
         if(error) throw error;
         if (state.isDirectory()) res.end();
         config.fileSize = state.size;
@@ -27,9 +34,9 @@ function fileSend(path, req, res) {
                 res.end(data);
             });
         } else { //大文件请求
+            
             var read = fs.createReadStream(path, {
-                encoding : 'binary',
-                bufferSize : 1024 * 1024,
+                bufferSize : 1024 * 1024 * 1024,
                 start : config.startPos,
                 end : config.fileSize
             });
@@ -38,6 +45,9 @@ function fileSend(path, req, res) {
                 res.end();
              })
         }
+        //read.on('data', function(data) {
+            // data为从缓存区拿到的数据
+        //})
     // if(Buffer.isBuffer(data)) { //判断是否为buffer类型
     //     if(Buffer.byteLength(data) < 1024 * 1024) {
     //         res.end(data);
@@ -62,7 +72,10 @@ http.createServer((req, res) => {
         fileSend('./src/ss.mp4', req, res);
         break;
         case '/stop' :
-        fileSend();
+        fileSend('./src/ss.mp4', req, res);
+        break;
+        case '/downloadtxt' :
+        fileSend('./src/big.txt', req, res);
         break;
         default:
         fileSend('.' + urlObj.pathname, req, res);
