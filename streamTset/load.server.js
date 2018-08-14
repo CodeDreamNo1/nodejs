@@ -9,7 +9,6 @@ const mime = require('mime');
    function fileSend(path, req, res) {
     var config = {};
     var startPos = 0;
-    
     if (req.headers.range) { 
         console.log(req.headers)
         var Range = req.headers.range;
@@ -34,7 +33,6 @@ const mime = require('mime');
                 res.end(data);
             });
         } else { //大文件请求
-            
             var read = fs.createReadStream(path, {
                 bufferSize : 1024 * 1024 * 1024,
                 start : config.startPos,
@@ -54,10 +52,8 @@ const mime = require('mime');
     //     } else {
     //        fileSend(path, req, res, true);
     //     };
-    // }        //data是buffer类型
-            
+    // }        //data是buffer类型     
     })
-    
 }
 http.createServer((req, res) => {
     if (req.url == "/favicon.ico" || req.url == '/src/jquery.min.map') {
